@@ -39,7 +39,7 @@ const logger = async (req, res, next) => {
 }
 
 const verifyToken = async (req, res, next) => {
-    const token = req.cookies?.token;
+    const token = req?.cookies?.token;
     if (!token) {
         return res.status(401).send({ message: 'unauthorized access' })
     }
@@ -64,17 +64,24 @@ async function run() {
 
         app.post('/jwt', logger, async (req, res) => {
             const user = req.body;
-            console.log(user);
+            console.log('user for token', user);
             const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET,
                 { expiresIn: '1h' })
 
             res
                 .cookie('token', token, {
                     httpOnly: true,
-                    secure: false,
+                    secure: true,
+                    sameSite: 'none'
 
                 })
                 .send({ success: true });
+        })
+
+        app.post('/logout', async (req, res) => {
+            const user = req.body;
+            console.log('logging out user', user)
+            res.clearCookie('token', { maxAge: 0 }).send({ success: true })
         })
         //services related api
         app.get('/services', logger, async (req, res) => {
